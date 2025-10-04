@@ -3,6 +3,7 @@ import requests
 import json
 from datetime import datetime, timedelta
 import time
+import matplotlib.pyplot as plt
 
 # Page configuration
 st.set_page_config(
@@ -232,7 +233,28 @@ with col2:
 # Weather History
 if st.session_state.weather_logs:
     st.header("📊 Weather History")
-    
+
+    # 🌡️ Temperature Graph (Last 12 Hours)
+    st.subheader("🌡️ Temperature Graph (Last 12 Hours)")
+
+    last_12_logs = st.session_state.weather_logs[-12:]
+    timestamps = [log['timestamp'] for log in last_12_logs]
+    temps = [log['temperature'] for log in last_12_logs]
+    feels = [log['feels_like'] for log in last_12_logs]
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(timestamps, temps, marker='o', label='Temperature (°C)', linewidth=2)
+    ax.plot(timestamps, feels, marker='s', linestyle='--', label='Feels Like (°C)', alpha=0.7)
+
+    ax.set_title('Temperature Trend (Last 12 Hours)', fontsize=14, weight='bold')
+    ax.set_xlabel('Time (HH:MM)', fontsize=12)
+    ax.set_ylabel('Temperature (°C)', fontsize=12)
+    ax.legend()
+    plt.xticks(rotation=45, ha='right')
+    plt.grid(True, linestyle='--', alpha=0.5)
+
+    st.pyplot(fig)
+
     # Simple table display
     st.subheader(f"📋 Showing {len(st.session_state.weather_logs)} weather logs")
     
@@ -255,19 +277,16 @@ if st.session_state.weather_logs:
     # Download data
     st.subheader("💾 Export Data")
     
-    if st.button("📥 Download CSV", use_container_width=True):
-        # Convert to CSV format
-        csv_data = "timestamp,city,country,temperature,feels_like,humidity,pressure,description,wind_speed,status\n"
-        
-        for log in st.session_state.weather_logs:
-            csv_data += f"{log['timestamp']},{log['city']},{log['country']},{log['temperature']},{log['feels_like']},{log['humidity']},{log['pressure']},{log['description']},{log['wind_speed']},{log['status']}\n"
-        
-        st.download_button(
-            label="📥 Download Weather Data",
-            data=csv_data,
-            file_name=f"weather_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv"
-        )
+    csv_data = "timestamp,city,country,temperature,feels_like,humidity,pressure,description,wind_speed,status\n"
+    for log in st.session_state.weather_logs:
+        csv_data += f"{log['timestamp']},{log['city']},{log['country']},{log['temperature']},{log['feels_like']},{log['humidity']},{log['pressure']},{log['description']},{log['wind_speed']},{log['status']}\n"
+    
+    st.download_button(
+        label="📥 Download Weather Data (CSV)",
+        data=csv_data,
+        file_name=f"weather_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        mime="text/csv"
+    )
 
 # Footer
 st.markdown("---")
